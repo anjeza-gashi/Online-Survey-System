@@ -6,8 +6,7 @@ const auth = (req, res, next) => {
         return res.status(401).json({ msg: "No token provided" });
     }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        req.user = jwt.verify(token, process.env.JWT_SECRET);
         next();
     }
     catch (err) {
@@ -15,6 +14,19 @@ const auth = (req, res, next) => {
     }
 }
 
-module.exports = {
-    auth
-}
+const authOptional = (req, res, next) => {
+    const token = req.header('x-auth-header');
+    if (!token) {
+        req.user = null;
+        return next();
+    }
+
+    try {
+        req.user = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+        req.user = null;
+    }
+    next();
+};
+
+module.exports = { auth, authOptional };

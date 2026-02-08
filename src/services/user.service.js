@@ -7,7 +7,7 @@ const generateToken = (userId) => {
     return token;
 }
 
-const register = async (name, email, password, role = "user") => {
+const register = async (name, email, password) => {
     const userExists = await findUser(email);
     if (userExists) {
         throw new Error("User already exists");
@@ -18,14 +18,12 @@ const register = async (name, email, password, role = "user") => {
         name: name,
         email: email,
         password: hashPassword,
-        role: role
     })
     await newUser.save()
     return {
         _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
-        role: newUser.role,
         token: generateToken(newUser._id)
     };
 }
@@ -46,7 +44,6 @@ const login = async (email, password) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
         token: generateToken(user._id)
     };
 }

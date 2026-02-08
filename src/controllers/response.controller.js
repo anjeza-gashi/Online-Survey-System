@@ -16,7 +16,8 @@ const submitResponse = async (req, res) => {
 const getResponsesBySurvey = async (req, res) => {
     try {
         const surveyId = req.params.surveyId;
-        const responses = await responseService.getResponsesBySurvey(surveyId);
+        const userId = req.user.id;
+        const responses = await responseService.getResponsesBySurvey(surveyId, userId);
         res.status(200).json(responses);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -26,5 +27,4 @@ const getResponsesBySurvey = async (req, res) => {
 module.exports = {
     submitResponse,
     getResponsesBySurvey,
-    getResponsesByUser
 };

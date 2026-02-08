@@ -48,9 +48,19 @@ const submitResponse = async (surveyId, answers, userId = null) => {
     return response;
 };
 
-const getResponsesBySurvey = async (surveyId) => {
-    return Response.find({ survey: surveyId }).populate('submittedBy', 'name');
+const getResponsesBySurvey = async (surveyId, userId) => {
+    const survey = await Survey.findById(surveyId);
+
+    if (!survey) throw new Error("Survey not found");
+
+    if (survey.createdBy.toString() !== userId.toString()) {
+        throw new Error("Not authorized to view responses");
+    }
+
+    return Response.find({ survey: surveyId })
+        .populate('submittedBy', 'name');
 };
+
 
 module.exports = {
     submitResponse,

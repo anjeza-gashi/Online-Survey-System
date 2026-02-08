@@ -12,13 +12,6 @@ const questionSchema = new mongoose.Schema({
     },
     options: {
         type: [String],
-        validate: {
-            validator: function (value) {
-                if (this.type === "text") return value.length === 0;
-                return value.length >= 2;
-            },
-            message: "Choice questions must have at least 2 options",
-        },
     },
     required: {
         type: Boolean,

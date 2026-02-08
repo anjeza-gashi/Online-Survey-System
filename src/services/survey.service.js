@@ -48,7 +48,7 @@ const deleteSurvey = async (surveyId, userId) => {
 
     if (survey.createdBy.toString() !== userId) throw new Error("Not authorized");
 
-    await survey.remove();
+    await survey.deleteOne();
     return survey;
 }
 
