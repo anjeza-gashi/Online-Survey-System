@@ -9,6 +9,7 @@ connectDB();
 
 app.use('/api/user', require('./routes/user.routes'));
 app.use('/api/survey', require('./routes/survey.routes'));
+app.use('/api/responses', require('./routes/response.routes'));
 
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
