@@ -4,37 +4,52 @@ const Survey = require('../models/Survey');
 const submitResponse = async (surveyId, answers, userId = null) => {
     const survey = await Survey.findById(surveyId);
     if (!survey) throw new Error('Survey not found');
+    if (!survey.isActive) throw new Error('Survey is not active');
 
-    const questionIds = survey.questions.map(q => q._id.toString());
-    answers.forEach(a => {
-        if (!questionIds.includes(a.questionId)) {
-            throw new Error(`Invalid question ID: ${a.questionId}`);
+    const questionMap = new Map();
+    survey.questions.forEach(q => questionMap.set(q._id.toString(), q));
+
+    const answeredQuestionIds = new Set();
+
+    for (const a of answers) {
+        if (answeredQuestionIds.has(a.questionId)) {
+            throw new Error(`Question "${questionMap.get(a.questionId)?.text || a.questionId}" has already been answered.`);
         }
+        answeredQuestionIds.add(a.questionId);
 
-        const question = survey.questions.id(a.questionId);
+        const question = questionMap.get(a.questionId);
+        if (!question) throw new Error(`Invalid question ID: ${a.questionId}`);
 
-        if (question.type === 'single-choice') {
-            if (!question.options.includes(a.value)) {
-                throw new Error(`Invalid answer for question "${question.text}". Must be one of the provided options.`);
-            }
+        switch (question.type) {
+            case 'single-choice':
+                if (!question.options.includes(a.value)) {
+                    throw new Error(`Invalid answer for question "${question.text}". Must be one of: ${question.options.join(', ')}`);
+                }
+                break;
+            case 'multiple-choice':
+                const invalidOptions = a.value.filter(opt => !question.options.includes(opt));
+                if (invalidOptions.length > 0) {
+                    throw new Error(`Invalid answer(s) for question "${question.text}": ${invalidOptions.join(', ')}`);
+                }
+                break;
+            case 'text':
+                if (typeof a.value !== 'string') {
+                    throw new Error(`Answer for question "${question.text}" must be a string`);
+                }
+                break;
+            default:
+                throw new Error(`Unsupported question type: ${question.type}`);
         }
+    }
 
-        if (question.type === 'multiple-choice') {
-            const invalidOptions = a.value.filter(opt => !question.options.includes(opt));
-            if (invalidOptions.length > 0) {
-                throw new Error(`Invalid answer(s) for question "${question.text}": ${invalidOptions.join(', ')}`);
-            }
-        }
-    });
-
-    survey.questions.forEach(q => {
-        if (q.required && !answers.find(a => a.questionId === q._id.toString())) {
+    for (const q of survey.questions) {
+        if (q.required && !answeredQuestionIds.has(q._id.toString())) {
             throw new Error(`Question "${q.text}" is required.`);
         }
-    });
+    }
 
     const answersWithText = answers.map(a => {
-        const question = survey.questions.id(a.questionId);
+        const question = questionMap.get(a.questionId);
         return { ...a, questionText: question.text };
     });
 

@@ -1,31 +1,39 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 const auth = (req, res, next) => {
-    const token = req.header('x-auth-header');
-    if (!token) {
-        return res.status(401).json({ msg: "No token provided" });
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Unauthorized: No token provided" });
     }
+
+    const token = authHeader.split(" ")[1];
+
     try {
-        req.user = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
         next();
+    } catch (err) {
+        return res.status(401).json({ message: "Unauthorized: Invalid token" });
     }
-    catch (err) {
-        return res.status(401).json({ msg: "Token is invalid" });
-    }
-}
+};
 
 const authOptional = (req, res, next) => {
-    const token = req.header('x-auth-header');
-    if (!token) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
         req.user = null;
         return next();
     }
+
+    const token = authHeader.split(" ")[1];
 
     try {
         req.user = jwt.verify(token, process.env.JWT_SECRET);
     } catch {
         req.user = null;
     }
+
     next();
 };
 

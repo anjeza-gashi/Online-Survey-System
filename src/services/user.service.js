@@ -8,7 +8,7 @@ const generateToken = (userId) => {
 }
 
 const register = async (name, email, password) => {
-    const userExists = await findUser(email);
+    const userExists = await User.findOne({ email: email });
     if (userExists) {
         throw new Error("User already exists");
     }
@@ -24,12 +24,11 @@ const register = async (name, email, password) => {
         _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
-        token: generateToken(newUser._id)
     };
 }
 
 const login = async (email, password) => {
-    const user = await findUser(email);
+    const user = await User.findOne({ email: email });
 
     if (!user) {
         throw new Error("User does not exist");
@@ -48,11 +47,47 @@ const login = async (email, password) => {
     };
 }
 
-const findUser = async (email) => {
-    const user = User.findOne({ email: email });
+const updateProfile = async (userId, updateData) => {
+    const user = await User.findById(userId).select("+password");
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    if (updateData.email) {
+        throw new Error("Email can't be changed");
+    }
+
+    if (updateData.password) {
+        const hashedPassword = await bcrypt.hash(updateData.password, 10);
+        user.password = hashedPassword;
+        delete updateData.password;
+    }
+
+    if (updateData.name) {
+        user.name = updateData.name;
+    }
+
+    await user.save();
+
+    return {
+        _id: user._id,
+        name: user.name,
+        email: user.email
+    };
+};
+
+const getProfile = async (userId) => {
+    const user = await User.findById(userId);
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
     return user;
-}
+};
+
 
 module.exports = {
-    register, login, findUser
+    register, login, updateProfile, getProfile
 }
