@@ -52,9 +52,9 @@ const deleteSurvey = async (req, res) => {
         res.status(200).json({ message: "Survey deleted successfully", survey: deletedSurvey });
     } catch (err) {
         if (err.message === "Not authorized") {
-            res.status(403).json({ message: err.message });
+            return res.status(403).json({ message: err.message });
         }
-        res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 

@@ -48,7 +48,7 @@ const login = async (email, password) => {
 }
 
 const updateProfile = async (userId, updateData) => {
-    const user = await User.findById(userId).select("+password");
+    const user = await User.findById(userId);
 
     if (!user) {
         throw new Error("User not found");

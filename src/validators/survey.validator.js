@@ -12,15 +12,38 @@ const createSurveyValidator = [
     body("questions.*.type")
         .isIn(["text", "single-choice", "multiple-choice"])
         .withMessage("Question type must be text, single-choice, or multiple-choice"),
-    body("questions.*.options")
-        .custom((value, { req, path }) => {
-            const type = path.includes(".type") ? value : null;
-            if (Array.isArray(value)) {
-                if (value.length < 2) throw new Error("Choice questions must have at least 2 options");
+    body("questions.*")
+        .custom((question) => {
+            if (question.type === "text") {
+
+                if (question.options && question.options.length > 0) {
+                    throw new Error("Text questions must not have options");
+                }
+
             }
+            if (
+                question.type === "single-choice" ||
+                question.type === "multiple-choice"
+            ) {
+
+                if (!Array.isArray(question.options)) {
+                    throw new Error("Choice questions must have options array");
+                }
+
+                if (question.options.length < 2) {
+                    throw new Error("Choice questions must have at least 2 options");
+                }
+
+                for (const option of question.options) {
+                    if (typeof option !== "string" || option.trim() === "") {
+                        throw new Error("Options must be non-empty strings");
+                    }
+                }
+
+            }
+
             return true;
-        })
-        .optional(),
+        }),
     body("questions.*.required").optional().isBoolean(),
     validate
 ];

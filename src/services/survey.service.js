@@ -15,9 +15,6 @@ const createSurvey = async ({ title, description, createdBy, isActive, questions
 
 const getAllSurveys = async () => {
     const surveys = await Survey.find().populate("createdBy", "name");;
-    if (!surveys) {
-        throw new Error("There are no surveys available!");
-    }
     return surveys;
 }
 
